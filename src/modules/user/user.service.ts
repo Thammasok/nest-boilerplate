@@ -1,29 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
-import type { FindOptionsWhere } from 'typeorm';
-import { Repository } from 'typeorm';
-import { Transactional } from 'typeorm-transactional';
+import type { FindConditions } from 'typeorm';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 
 import type { PageDto } from '../../common/dto/page.dto';
 import { FileNotImageException, UserNotFoundException } from '../../exceptions';
 import { IFile } from '../../interfaces';
 import { AwsS3Service } from '../../shared/services/aws-s3.service';
 import { ValidatorService } from '../../shared/services/validator.service';
+import type { Optional } from '../../types';
 import { UserRegisterDto } from '../auth/dto/UserRegisterDto';
 import { CreateSettingsCommand } from './commands/create-settings.command';
 import { CreateSettingsDto } from './dtos/create-settings.dto';
 import type { UserDto } from './dtos/user.dto';
 import type { UsersPageOptionsDto } from './dtos/users-page-options.dto';
-import { UserEntity } from './user.entity';
+import type { UserEntity } from './user.entity';
+import { UserRepository } from './user.repository';
 import type { UserSettingsEntity } from './user-settings.entity';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
+    private userRepository: UserRepository,
     private validatorService: ValidatorService,
     private awsS3Service: AwsS3Service,
     private commandBus: CommandBus,
@@ -32,13 +31,13 @@ export class UserService {
   /**
    * Find single user
    */
-  findOne(findData: FindOptionsWhere<UserEntity>): Promise<UserEntity | null> {
-    return this.userRepository.findOneBy(findData);
+  findOne(findData: FindConditions<UserEntity>): Promise<Optional<UserEntity>> {
+    return this.userRepository.findOne(findData);
   }
 
   async findByUsernameOrEmail(
     options: Partial<{ username: string; email: string }>,
-  ): Promise<UserEntity | null> {
+  ): Promise<Optional<UserEntity>> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect<UserEntity, 'user'>('user.settings', 'settings');
@@ -61,7 +60,7 @@ export class UserService {
   @Transactional()
   async createUser(
     userRegisterDto: UserRegisterDto,
-    file?: IFile,
+    file: IFile,
   ): Promise<UserEntity> {
     const user = this.userRepository.create(userRegisterDto);
 

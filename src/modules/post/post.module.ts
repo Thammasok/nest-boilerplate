@@ -3,15 +3,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CreatePostHandler } from './commands/create-post.command';
 import { PostController } from './post.controller';
-import { PostEntity } from './post.entity';
+import { PostRepository } from './post.repository';
 import { PostService } from './post.service';
-import { PostTranslationEntity } from './post-translation.entity';
+import { PostTranslationRepository } from './post-translation.repository';
 import { GetPostHandler } from './queries/get-post.query';
 
 export const handlers = [CreatePostHandler, GetPostHandler];
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PostEntity, PostTranslationEntity])],
+  imports: [
+    TypeOrmModule.forFeature([PostRepository, PostTranslationRepository]),
+  ],
   providers: [PostService, ...handlers],
   controllers: [PostController],
 })

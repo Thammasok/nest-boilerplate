@@ -53,7 +53,7 @@ export class ApiConfigService {
   }
 
   get fallbackLanguage(): string {
-    return this.getString('FALLBACK_LANGUAGE');
+    return this.getString('FALLBACK_LANGUAGE').toLowerCase();
   }
 
   get postgresConfig(): TypeOrmModuleOptions {

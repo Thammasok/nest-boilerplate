@@ -1,29 +1,33 @@
-import { InjectDataSource } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
+import { InjectConnection } from '@nestjs/typeorm';
 import type {
   ValidationArguments,
   ValidationOptions,
   ValidatorConstraintInterface,
 } from 'class-validator';
 import { registerDecorator, ValidatorConstraint } from 'class-validator';
-import type { EntitySchema, FindOptionsWhere, ObjectType } from 'typeorm';
-import { DataSource } from 'typeorm';
+import type { EntitySchema, FindConditions, ObjectType } from 'typeorm';
+import { Connection } from 'typeorm';
 
-/**
- * @deprecated Don't use this validator until it's fixed in NestJS
- */
+@Injectable()
 @ValidatorConstraint({ name: 'exists', async: true })
 export class ExistsValidator implements ValidatorConstraintInterface {
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
+  constructor(@InjectConnection() private readonly connection: Connection) {}
 
   public async validate<E>(
     value: string,
     args: IExistsValidationArguments<E>,
   ): Promise<boolean> {
-    const [entityClass, findCondition] = args.constraints;
+    const [entityClass, findCondition = args.property] = args.constraints;
 
     return (
-      (await this.dataSource.getRepository(entityClass).count({
-        where: findCondition(args),
+      (await this.connection.getRepository(entityClass).count({
+        where:
+          typeof findCondition === 'function'
+            ? findCondition(args)
+            : {
+                [findCondition || args.property]: value,
+              },
       })) > 0
     );
   }
@@ -38,7 +42,7 @@ export class ExistsValidator implements ValidatorConstraintInterface {
 
 type ExistsValidationConstraints<E> = [
   ObjectType<E> | EntitySchema<E> | string,
-  (validationArguments: ValidationArguments) => FindOptionsWhere<E>,
+  ((validationArguments: ValidationArguments) => FindConditions<E>) | keyof E,
 ];
 interface IExistsValidationArguments<E> extends ValidationArguments {
   constraints: ExistsValidationConstraints<E>;

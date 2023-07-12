@@ -1,9 +1,7 @@
 import type { ICommand, IQueryHandler } from '@nestjs/cqrs';
 import { QueryHandler } from '@nestjs/cqrs';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 
-import { PostEntity } from '../post.entity';
+import { PostRepository } from '../post.repository';
 
 export class GetPostQuery implements ICommand {
   constructor(public readonly userId: Uuid) {}
@@ -11,14 +9,11 @@ export class GetPostQuery implements ICommand {
 
 @QueryHandler(GetPostQuery)
 export class GetPostHandler implements IQueryHandler<GetPostQuery> {
-  constructor(
-    @InjectRepository(PostEntity)
-    private postRepository: Repository<PostEntity>,
-  ) {}
+  constructor(private postRepository: PostRepository) {}
 
   async execute(query: GetPostQuery) {
-    return this.postRepository.findBy({
-      userId: query.userId as never,
+    return this.postRepository.find({
+      userId: query.userId,
     });
   }
 }

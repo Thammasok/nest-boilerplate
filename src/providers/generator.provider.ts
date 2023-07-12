@@ -1,5 +1,7 @@
 import { v1 as uuid } from 'uuid';
 
+import type { Optional } from '../types';
+
 export class GeneratorProvider {
   static uuid(): string {
     return uuid();
@@ -9,28 +11,24 @@ export class GeneratorProvider {
     return GeneratorProvider.uuid() + '.' + ext;
   }
 
-  static getS3PublicUrl(key: string): string {
+  static getS3PublicUrl(key: string): Optional<string> {
     if (!key) {
-      throw new TypeError('key is required');
+      return;
     }
 
     return `https://s3.${process.env.AWS_S3_BUCKET_NAME_REGION}.amazonaws.com/${process.env.AWS_S3_BUCKET_NAME}/${key}`;
   }
 
-  static getS3Key(publicUrl: string): string {
+  static getS3Key(publicUrl: string): Optional<string> {
     if (!publicUrl) {
-      throw new TypeError('key is required');
+      return;
     }
 
     const exec = new RegExp(
       `(?<=https://s3.${process.env.AWS_S3_BUCKET_NAME_REGION}.amazonaws.com/${process.env.AWS_S3_BUCKET_NAME}/).*`,
     ).exec(publicUrl);
 
-    if (!exec) {
-      throw new TypeError('publicUrl is invalid');
-    }
-
-    return exec[0];
+    return exec?.[0];
   }
 
   static generateVerificationCode(): string {

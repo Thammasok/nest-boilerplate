@@ -1,13 +1,14 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
-import { AbstractTranslationEntity } from '../../common/abstract.entity';
+import { AbstractEntity } from '../../common/abstract.entity';
+import { LanguageCode } from '../../constants';
 import { UseDto } from '../../decorators';
 import { PostTranslationDto } from './dtos/post-translation.dto';
 import { PostEntity } from './post.entity';
 
 @Entity({ name: 'post_translations' })
 @UseDto(PostTranslationDto)
-export class PostTranslationEntity extends AbstractTranslationEntity<PostTranslationDto> {
+export class PostTranslationEntity extends AbstractEntity<PostTranslationDto> {
   @Column()
   title: string;
 
@@ -16,6 +17,9 @@ export class PostTranslationEntity extends AbstractTranslationEntity<PostTransla
 
   @Column({ type: 'uuid' })
   postId: Uuid;
+
+  @Column({ type: 'enum', enum: LanguageCode })
+  languageCode: LanguageCode;
 
   @ManyToOne(() => PostEntity, (postEntity) => postEntity.translations, {
     onDelete: 'CASCADE',

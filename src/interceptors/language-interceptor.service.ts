@@ -16,7 +16,7 @@ export class LanguageInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Observable<undefined> {
     const request = context.switchToHttp().getRequest();
-    const language: string = request.headers['x-language-code'];
+    const language: LanguageCode = request.headers['x-language']?.toUpperCase();
 
     if (LanguageCode[language]) {
       ContextProvider.setLanguage(language);
